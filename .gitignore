@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+dec_tester.py
+EPIC_100_validation.csv
+timestamp_converter.py
+pytorch_test.py
