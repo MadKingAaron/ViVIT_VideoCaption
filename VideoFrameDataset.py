@@ -2,17 +2,18 @@ import torch
 from torch.utils.data import Dataset
 import torchvision
 import torchvision.transforms as transforms
-import cv2
+#import cv2
 #from imutils.video import count_frames
 #import sys
 from skvideo.io import FFmpegReader
 from itertools import islice
 from frame_transforms import FrameTransforms
+from random import sample
 
 import numpy as np
 import pandas as pd
 from collections import OrderedDict
-from vit_pytorch.vivit import ViT
+#from vit_pytorch.vivit import ViT
 
 
 class LRUCache:
@@ -190,7 +191,7 @@ class VideoFrameDataset(Dataset):
         self.dataset_df = pd.read_csv(dataset_csv)
         self.narration_ids = self.dataset_df['narration_id']
         self.dataset_df.set_index('narration_id', inplace=True)
-        self.cache = LRUCache(capacity=30)
+        self.cache = LRUCache(capacity=cache_capacity)
     
     def __getitem__(self, index) -> torch.Tensor:
         if index < 0 or index >= len(self.narration_ids):
@@ -208,14 +209,15 @@ class VideoFrameDataset(Dataset):
 
     def _get_video_seq(self, row:pd.Series) -> torch.Tensor:
 
-        timestamp = self._convert_timestamp(row['start_timestamp'])
+        #timestamp = self._convert_timestamp(row['start_timestamp'])
         start_frame = row['start_frame']
         stop_frame = row['stop_frame']
         video_file = row['video_id']+".MP4"
+        narration = row['narration']
 
         vid_sequencer = self._get_vid_sequencer(video_file)
 
-        return vid_sequencer.get_frame_subset(start_frame, stop_frame)
+        return vid_sequencer.get_frame_subset(start_frame, stop_frame), narration
 
         
     
@@ -227,6 +229,16 @@ class VideoFrameDataset(Dataset):
     def _get_vid_sequencer(self, video_file:str)->VideoFrameSequencer:
         
         return VideoFrameSequencerSKVideo(video_file)
+    
+    def get_random_batch(self, batch_size:int=256):
+        if batch_size < 0 or batch_size > len(self.narration_ids):
+            raise IndexError()
+
+        batch_idxs = sample(range(len(self.narration_ids)), batch_size)
+
+        for idx in batch_idxs:
+            yield self.__getitem__(idx)
+
 
 if __name__ == '__main__':
     #print(sys.getsizeof(VideoFrameSequencer('P01_11.MP4')))
