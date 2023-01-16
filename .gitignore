@@ -133,3 +133,4 @@ EPIC_100_validation.csv
 timestamp_converter.py
 pytorch_test.py
 Videos/EPIC-KITCHENS/*.MP4
+*.MP4
