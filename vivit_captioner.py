@@ -59,4 +59,5 @@ if __name__ == "__main__":
     vivit.eval()
     out = vivit(x)
     print(out.shape)
+    print(vivit)
 
