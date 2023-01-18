@@ -769,20 +769,28 @@ def replace_state_dict(state_dict):
 			new_key = old_key[9:]
 			state_dict[new_key] = state_dict.pop(old_key)
 
+def load_pretrained(model:nn.Module, weight_dir:str):
+	state_dict = torch.load(weight_dir)
+
+	replace_state_dict(state_dict)
+
+	model.load_state_dict(state_dict, strict=False)
+
 def create_lookahead_mask(shape:int) -> torch.Tensor:
     return torch.triu(torch.ones(shape, shape) * float('-inf'), diagonal=1)
 if __name__ == "__main__":
-	num_frames = 15
-	img_size = 256
+	num_frames = 8 * 2
+	img_size = 224
 	inp = torch.zeros(1, num_frames, 3, img_size, img_size)
 	model = ViViTModel2(num_frames=num_frames,
                 img_size=img_size,
-                patch_size=8,
+                patch_size=16,
                 embed_dims=768,
                 in_channels=3,
-                attention_type='joint_space_time',
+                attention_type='fact_encoder',
                 return_cls_token=False,
 				conv_type='Conv3d')
+	load_pretrained(model, './vivit_model.pth')
 	outpt = model(inp)
 	print(torch.squeeze(outpt).shape)
 	print(outpt[0][0].shape)

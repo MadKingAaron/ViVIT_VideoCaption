@@ -109,10 +109,27 @@ if __name__ == "__main__":
                             dec_depth=6,
                             enc_heads=1000,
                             device=device
-                            )
+                            ).to(device)
     
     vivit.eval()
     out = vivit(x)
     print(out.shape)
-    print(vivit)
+    # print(vivit)
+
+    num_frames = 15
+    img_size = 256
+    x = torch.zeros(1, num_frames, 3, img_size, img_size).to(device)
+    model = ViVIT_CaptionerModel2(num_frames=num_frames,
+                img_size=img_size,
+                patch_size=8,
+                embed_dims=768,
+                in_channels=3,
+                attention_type='joint_space_time',
+                return_cls_token=False,
+				conv_type='Conv3d').to(device)
+    
+    vivit.eval()
+    out = model(x)
+    print(out.shape)
+
 
