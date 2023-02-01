@@ -8,13 +8,15 @@ from types import FunctionType
 
 
 class BERT_Based_Model():
-    def __init__(self, model_type:str = 'bert') -> None:
+    def __init__(self, device = torch.device('cpu'), model_type:str = 'bert') -> None:
         if model_type == 'bert':
             self.model, self.tokenizer = self.get_bert_model()
         elif model_type == 'roberta':
             self.model, self.tokenizer = self.get_roberta_model()
         else: # Default to BERT, if unknown model type
             self.model, self.tokenizer = self.get_bert_model()
+        
+        self.model = self.model.to(device)
     
     def _get_model(self, model_creator:FunctionType = BertModel.from_pretrained, model_name:str = 'bert-large-uncased'):
         tokenzier = AutoTokenizer.from_pretrained(model_name)
