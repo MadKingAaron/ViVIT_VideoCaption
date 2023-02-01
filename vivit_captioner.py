@@ -20,7 +20,7 @@ def get_loss(criterion, outputs:torch.Tensor, labels:torch.Tensor) -> torch.Tens
 class ViVIT_CaptionerModel3(nn.Module):
     def __init__(self, frames, frame_size, patch_t, patch_size, num_classes, dim, enc_depth, dec_depth, enc_heads=1000, enc_mlp_dim=8, dec_heads=8, enc_dim_head=3, channels=3, mode='tubelet', emb_dropout=0, dropout=0, device=torch.device("cpu")) -> None:
         super().__init__()
-        self.encoder = vivit.ViViT_FSA(frames, frame_size, patch_t, patch_size, num_classes, dim, enc_depth, enc_heads, enc_mlp_dim, enc_dim_head, channels, mode, emb_dropout, dropout, device=device)
+        self.encoder = vivit.ViViT_FSA(frames, frame_size, patch_t, patch_size, num_classes, dim, enc_depth, enc_heads, enc_mlp_dim, enc_dim_head, channels, mode, emb_dropout, dropout, device=device, classifer=False)
 
         decoder_layer = nn.TransformerDecoderLayer(d_model=512, nhead=dec_heads)
 

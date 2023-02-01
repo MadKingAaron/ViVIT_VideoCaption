@@ -3,7 +3,7 @@ from torch import nn, einsum
 from einops.layers.torch import Rearrange
 from einops import rearrange, repeat
 
-from VideoFrameDataset import VideoFrameDataset
+
 
 def pair(t):
     return t if isinstance(t, tuple) else (t, t)
@@ -290,6 +290,7 @@ class ViViT_FSA(nn.Module):
 
 ###################### For testing ############################
 if __name__ == '__main__':
+    from VideoFrameDataset import VideoFrameDataset
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     #device = torch.device('cpu')
     x = torch.rand(1, 3, 32, 64, 64).to(device)
