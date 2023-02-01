@@ -245,7 +245,7 @@ if __name__ == '__main__':
     #print(sys.getsizeof(17))
 
     ds = VideoFrameDataset("EPIC_100_VALIDATION.csv")
-    print(ds[0].shape)
+    print(ds[0])
     """
     v = ViT(
         image_size = 128,          # image size
