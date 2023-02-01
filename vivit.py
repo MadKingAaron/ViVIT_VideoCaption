@@ -190,11 +190,11 @@ class FactorizedSelfAttentionTransformerEnc(nn.Module):
     def forward(self, x):
         b = x.shape[0]
         x = torch.flatten(x, start_dim=0, end_dim=1) # get spacial tokens from x
-        print("X",x.shape)
+        # print("X",x.shape)
         count = 0
         for spacial_attn, temp_attn, ff in self.layers:
             spacial_x = spacial_attn(x) + x # Spacial Attn
-            print('sp_attn_layer:', spacial_attn(x).shape)
+            # print('sp_attn_layer:', spacial_attn(x).shape)
             
 
 
@@ -215,7 +215,7 @@ class FactorizedSelfAttentionTransformerEnc(nn.Module):
 
 
 class ViViT_FSA(nn.Module):
-    def __init__(self, frames, frame_size, patch_t, patch_size, num_classes, dim, depth, heads, mlp_dim, dim_head=3, channels=3, mode='tubelet', emb_dropout=0.0, dropout=0.0, device=torch.device("cpu")) -> None:
+    def __init__(self, frames, frame_size, patch_t, patch_size, num_classes, dim, depth, heads, mlp_dim, dim_head=3, channels=3, mode='tubelet', emb_dropout=0.0, dropout=0.0, device=torch.device("cpu"), classifer = False) -> None:
         super().__init__()
         self.T = frames
         self.H, self.W = pair(frame_size)
@@ -252,28 +252,43 @@ class ViViT_FSA(nn.Module):
 
         self.mlp_head = nn.Sequential(
             nn.LayerNorm(dim),
-            nn.Linear(dim, num_classes)
+            nn.Linear(dim, num_classes),
+            nn.Tanh() # To mirror BERT
         )
+
+        self.classifer = classifer
     
+    def set_to_classifier(self):
+        self.classifer = True
+    
+    def unset_to_classifer(self):
+        self.classifer = False
+
     def forward(self, x):
         # X is (b, C, T, H, W)
 
         #print(x.shape)
 
         tubelets = self.tubelet_embedder(x)
-        print(tubelets.get_device())
+        #print(tubelets.get_device())
         tubelets += self.pos_embeddings
         tubelets = self.dropout_layer(tubelets)
 
-        print(tubelets.shape)
+        #print(tubelets.shape)
         x = self.transformer(tubelets)
 
-        return x
-        x = x.mean(dim=1)
+        #return x
+        if self.classifer:
+            x = x.mean(dim=1)
 
-        x = self.latent_layer(x)
-        return self.mlp_head(x)
+            x = self.latent_layer(x)
+            output =  self.mlp_head(x)
+        else:
+            output = x
+        
+        return output
 
+###################### For testing ############################
 if __name__ == '__main__':
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     #device = torch.device('cpu')
