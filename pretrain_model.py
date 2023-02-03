@@ -59,6 +59,9 @@ class PreTrainer():
         video_clips, captions = self.get_batch(batch_size)
 
         for i in range(batch_size):
+
+            optimizer.zero_grad()
+
             video_clip = video_clips[i]
             caption = captions[i]
             model_output = self.model(video_clip)
