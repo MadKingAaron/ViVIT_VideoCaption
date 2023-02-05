@@ -33,6 +33,7 @@ class PreTrainer():
         return self.criterion(training_pred, gt, torch.tensor(1.0))
     
     def backprop_and_step(self, loss, optimizer) -> float:
+        optimizer.zero_grad()
         loss.backward()
         optimizer.step()
         return loss.item()
@@ -60,7 +61,7 @@ class PreTrainer():
 
         for i in range(batch_size):
 
-            optimizer.zero_grad()
+            # optimizer.zero_grad()
 
             video_clip = video_clips[i]
             caption = captions[i]
