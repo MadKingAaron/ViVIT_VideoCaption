@@ -2,9 +2,26 @@ import math
 import torch
 import vivit
 import bert_model
+import VideoFrameDataset
 from torch import nn
+from tensorboard import TensorBoard
+
+from sys import platform
 
 
+class NoDatasetError(Exception):
+    def __init__(self) -> None:
+        self.message = "No dataset has been created yet. Use 'setDataset'"
+        super().__init__(self.message)
+
+
+def set_device():
+    if platform == "darwin": # If Mac OS
+        return torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    elif platform == 'linux' or platform == 'win32': # If Linux or Windows
+        return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    else:
+        return torch.device('cpu')
 
 class PreTrainer():
     def __init__(self, device=torch.device('cpu'), lang_model:str='bert', frames:int=512, frame_size:int=256, patch_t:int=8, patch_size:int=4, dim:int=512, enc_depth:int=6, attn_heads:int=10, mlp_dim:int=8, dropout:float=0.6):
@@ -24,7 +41,17 @@ class PreTrainer():
                                 device=device,
                                 classifer=True).to(device)
         
+
+        
         self.criterion = nn.CosineEmbeddingLoss()
+
+        self.total_frames = frames
+        self.frame_size = frame_size
+        self.dataset = None
+
+    def set_dataset(self, dataset_csv:str, video_file_col:str = 'video_file', video_folder_dir:str = './pretrain_data'):
+        self.dataset = VideoFrameDataset.PretrainDataset(dataset_csv=dataset_csv, frame_shape=self.frame_size, total_frames=self.total_frames, 
+                    video_file_col=video_file_col, video_folder_dir=video_folder_dir)
 
     def get_lang_model_output(self, str_input:str) -> torch.Tensor:
         return self.lang_model.get_model_CLS_logits(input_string=str_input)
@@ -38,8 +65,9 @@ class PreTrainer():
         optimizer.step()
         return loss.item()
     
-    def get_batch(self, batch_size:int):
-        return None, None
+    def get_batch(self, batch_size:int=256) -> tuple[torch.Tensor, list]:
+        self.dataset_check()
+        return self.dataset.get_batch(batch_size)
     
     def _print_epoch(self, epoch:int):
         digits = int(math.log10(epoch))+1
@@ -48,8 +76,14 @@ class PreTrainer():
         end = '*'*(stars - digits)
         print(start+str(epoch)+end)
 
+    def dataset_check(self):
+        if self.dataset is None:
+            raise NoDatasetError()
+        
     def train_model(self, lr:float, epochs:int, batch_size:int):
-        optimizer = None
+        self.dataset_check()
+
+        optimizer = None # TODO: Need to set optimizer
         for epoch in range(epochs):
             self._print_epoch(epoch)
             running_loss = self.train_batch(optimizer, epoch, batch_size)
